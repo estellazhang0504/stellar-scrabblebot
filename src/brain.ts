@@ -8,7 +8,7 @@ export const BAG0 = [9, 2, 2, 4, 12, 2, 3, 2, 9, 1, 1, 4, 2, 6, 8, 2, 1, 6, 4, 6
 // Median price paid per letter across 464 live matches on 2026-11-07.
 export const MARKET = [11, 17, 18, 14, 11, 20, 13, 21, 10, 31, 24, 11, 17, 11, 10, 17, 26, 11, 12, 10, 11, 18, 19, 33, 22, 39];
 // Before the rack has shape: letters that start long words easily are worth more.
-const EARLY = [1.05, 0.8, 0.8, 0.95, 1.15, 0.7, 0.85, 0.7, 1.05, 0.5, 0.5, 0.95, 0.8, 1.05, 0.95, 0.8, 0.3, 1.05, 1.15, 1.05, 0.75, 0.55, 0.6, 0.6, 0.7, 0.5];
+const EARLY = [1, 0.7, 0.7, 0.9, 1.1, 0.6, 0.8, 0.6, 1, 0.4, 0.4, 0.9, 0.7, 1, 0.9, 0.7, 0.3, 1, 1.1, 1, 0.7, 0.5, 0.5, 0.5, 0.6, 0.4];
 
 export const CASH_BAG = 8; // bag at or below this: play everything, best first
 export const REFILL_BAL = 10; // balance below this: play a 5+ letter word for coins
@@ -89,7 +89,7 @@ export function reach(lex: Lexicon, rack: number[], pool: number[], t: number): 
         }
       }
     }
-    if (ok) n += W.s * W.s; // squared: favour high-scoring targets over common-letter ones
+    if (ok) n += W.s;
   }
   return n;
 }
@@ -125,8 +125,7 @@ export function decideBid(lex: Lexicon, c: BidCtx): number {
     const t = clamp(7 - tiles, 1, 3);
     const n0 = reach(lex, c.rack, c.pool, t);
     const n1 = reach(lex, withL, c.pool, t);
-    // Baseline 0.75 (was 0.6): live play won 13.3 letters a match against Tilewise's 14.8.
-    m = clamp(0.75 + 0.45 * Math.log2((n1 + 1500) / (n0 + 1500)), 0.3, 2);
+    m = clamp(0.6 + 0.45 * Math.log2((n1 + 50) / (n0 + 50)), 0.25, 1.9);
   }
   if (tiles >= 10) m *= 0.6;
 
@@ -134,7 +133,7 @@ export function decideBid(lex: Lexicon, c: BidCtx): number {
   const now = (best(lex, withL, 7)?.s ?? 0) - (best(lex, c.rack, 7)?.s ?? 0);
 
   // Spend faster when the balance outruns what the rest of the bag will cost.
-  const pace = clamp(bal / Math.max(20, 2.2 * c.bag), 0.95, 2.5);
+  const pace = clamp(bal / Math.max(20, 2.2 * c.bag), 0.8, 2.5);
   const b = Math.max(MARKET[L]! * m * pace, now * 0.8);
   return clamp(Math.round(b), 0, bal);
 }
